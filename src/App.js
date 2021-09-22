@@ -174,7 +174,7 @@ function App() {
   const [open, setOpen] = useState(false);
 
   /** whether to simulate fee redistributions at an arbitrary rate */
-  const [startingBalance, setStartingBalance] = useState(100000);
+  const [startingBalance, setStartingBalance] = useState(1000);
 
   /** whether to simulate fee redistributions at an arbitrary rate */
   const [startingDeposit, setStartingDeposit] = useState(0);
@@ -195,11 +195,11 @@ function App() {
   const [startDate, setStartDate] = useState(currentDateStartOfDayUTC());
 
   /** how long the simulation should run for in days*/
-  const [simulationDurationDays, setSimulationDurationDays] = useState(50);
+  const [simulationDurationDays, setSimulationDurationDays] = useState(365);
 
   /** conditions and events that rule the simulation */
   const [events, setEvents] = useState([
-    { type: EventType.WITHDRAWAL, interval: Interval.MONTH, value: 3000 },
+   // { type: EventType.WITHDRAWAL, interval: Interval.MONTH, value: 3000 },
    // { type: EventType.DEPOSIT, interval: Interval.MONTH, value: 1000 },
    // { type: EventType.WITHDRAWAL, interval: Interval.ONCE, value: 1000, date: new Date(Date.UTC(2021, 9 - 1, 23)) }, 
   ]);
