@@ -39,7 +39,6 @@ import moment from 'moment';
 import _ from 'lodash';
 
 Highcharts.setOptions({
-
   lang: {
     decimalPoint: '.',
     thousandsSep: ','
@@ -64,7 +63,6 @@ SimpleDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
   open: PropTypes.bool.isRequired
 };
-
 
 function SimpleDialog(props) {
   
@@ -561,12 +559,12 @@ function App() {
   return (
     <div>
       <Box sx={{ flexGrow: 1 }} m={5}>
-        <Grid container spacing={{ xs: 2, lg: 3 }} columns={{ xl: 12, xs: 4 }}
+        <Grid container spacing={{ xs: 2, lg: 3 }} columns={{ xs: 6 }}
         justifyContent="space-around"
         alignItems="center"
         >
 
-          <Grid item xs={6} xl={4}>
+          <Grid item xs={6}>
             <Paper elevation={2} style={{ padding: 20}}>
             <Stack spacing={1} direction="row" justifyContent="space-around">
               <DatePicker
@@ -591,7 +589,7 @@ function App() {
             </Stack>
             </Paper>
           </Grid>
-          <Grid item xs={4} xl={4}>
+          <Grid item xs={6}>
             <Paper elevation={2} style={{ padding: 20}}>
           <Stack spacing={1} direction="row" justifyContent="space-around">
           <FormControlLabel
@@ -612,7 +610,7 @@ function App() {
             </Stack>
             </Paper>
           </Grid>
-          <Grid item xs={4} xl={4}>
+          <Grid item item xs={6}>
           <Paper elevation={2} style={{ padding: 20}}>
             <Stack spacing={1} direction="row" justifyContent="space-around">
               <TextField label="Additional Deposit Fees" type="number" value={additionalDepositFees}
@@ -629,7 +627,7 @@ function App() {
             </Paper>
           </Grid>
           
-          <Grid item xl={12} xs={4}>
+          <Grid item xs={6}>
             <Item>
               <HighchartsReact highcharts={Highcharts} options={chartOptions} />
             </Item>
