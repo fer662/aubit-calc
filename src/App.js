@@ -386,7 +386,11 @@ function App() {
       currentDate = new Date(currentDate.getTime() + 24 * 3600 * 1000);
 
       // Apply interest
-      currentBalance = currentBalance * (1 + dailyInterest) * (1 + dailyRedistributions);
+      currentBalance = currentBalance * (1 + dailyInterest);
+
+      if (simulateRedistributions) {
+        currentBalance = currentBalance * (1 + dailyRedistributions);
+      }
 
       // Apply daily events
       tempEvents.forEach((event) => {
