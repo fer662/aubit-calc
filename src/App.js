@@ -148,14 +148,19 @@ function AddEventDialog(props) {
       <DialogTitle>Add New Event</DialogTitle>
       <DialogContent >
       <Grid container spacing={{ xs: 2 }} columns={{ xs: 3 }}>
-
-      <Grid item xs={3}>
-        <TextField label="Name" type="text" value={name}
+      <Grid item xs={3} padding={3}>
+        </Grid>
+      <Grid item xs={3} padding={3}>
+        <TextField label="Name" type="text" value={name} placeholder="Self-Payday"
           InputLabelProps={{ shrink: true }}
           onChange={handleNameChange}/>
       </Grid>
       <Grid item xs={3}>
+      
+      <FormControl fullWidth required variant="outlined">
+      <InputLabel shrink required={false} htmlFor="type">Type</InputLabel>
       <Select
+        id="type"
         value={type}
         label="Type"
         onChange={handleTypeChange}
@@ -164,10 +169,15 @@ function AddEventDialog(props) {
         <MenuItem value={EventType.PERCENTAGE_WITHDRAWAL}>{capitalize(EventType.PERCENTAGE_WITHDRAWAL)}</MenuItem>
         <MenuItem value={EventType.DEPOSIT}>{capitalize(EventType.DEPOSIT)}</MenuItem>
       </Select>
+      </FormControl>
+
       </Grid>
 
       <Grid item xs={3}>
+      <FormControl fullWidth required variant="outlined">
+      <InputLabel shrink required={false} htmlFor="interval">Interval</InputLabel>
       <Select
+        id="interval"
         value={interval}
         label="Interval"
         onChange={handleIntervalChange}
@@ -179,6 +189,7 @@ function AddEventDialog(props) {
         <MenuItem value={Interval.SEMESTER}>{capitalize(Interval.SEMESTER)}</MenuItem>
         <MenuItem value={Interval.EVERY_YEAR}>{capitalize(Interval.EVERY_YEAR)}</MenuItem>
       </Select>
+      </FormControl>
       </Grid>
       <Grid item xs={3}>
         <TextField label="Amount" type="number" value={value}
