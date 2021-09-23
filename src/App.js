@@ -59,6 +59,7 @@ const Interval = {
 const EventType = {
   DEPOSIT: "deposit",                       // Periodic deposit of constant amount
   WITHDRAWAL: "withdrawal",                 // Periodic withdrawal of constant amount
+  PERCENTAGE_WITHDRAWAL: "percentage withdrawal"  // Periodic withdrawal of percentage of balance
 };
 
 SaveShareDialog.propTypes = {
@@ -153,6 +154,7 @@ function AddEventDialog(props) {
         onChange={handleTypeChange}
       >
         <MenuItem value={EventType.WITHDRAWAL}>{capitalize(EventType.WITHDRAWAL)}</MenuItem>
+        <MenuItem value={EventType.PERCENTAGE_WITHDRAWAL}>{capitalize(EventType.PERCENTAGE_WITHDRAWAL)}</MenuItem>
         <MenuItem value={EventType.DEPOSIT}>{capitalize(EventType.DEPOSIT)}</MenuItem>
       </Select>
       </Grid>
@@ -174,7 +176,7 @@ function AddEventDialog(props) {
       <Grid item xs={3}>
         <TextField label="Amount" type="number" value={value}
           InputLabelProps={{ shrink: true }}
-          InputProps={{ endAdornment: <InputAdornment position="end">USD</InputAdornment> }}
+          InputProps={{ endAdornment: type === EventType.PERCENTAGE_WITHDRAWAL ? <InputAdornment position="end">%</InputAdornment> : <InputAdornment position="end">USD</InputAdornment> }}
           onChange={handleValueChange}/>
       </Grid>
       
@@ -409,6 +411,16 @@ function App() {
               withdrawals.push({ x: currentDate.getTime(), y: currentBalance, amount: event.value, fees: fees});
               break;
             }
+            case EventType.PERCENTAGE_WITHDRAWAL:
+            {
+                const value = event.value * currentBalance / 100;
+                const fees = value * (kWithdrawalFee / 100 + additionalWithdrawalFees / 100);
+                totalWithdrawalFees += fees;
+                currentBalance -= value;
+                totalNetWithdrawn += value - fees;
+                withdrawals.push({ x: currentDate.getTime(), y: currentBalance, amount: value, fees: fees});
+                break;
+              }
           }
         }
       });
@@ -631,6 +643,14 @@ function App() {
           string = `Withdraw $${event.value} on ${formatDateUTC(event.date)}`;
         }
         break;
+      case EventType.PERCENTAGE_WITHDRAWAL:
+          if (event.interval !== Interval.ONCE) {
+            string = `Withdraw ${event.value}% every ${event.interval}`;
+          }
+          else {
+            string = `Withdraw ${event.value}% on ${formatDateUTC(event.date)}`;
+          }
+          break;
       case EventType.DEPOSIT:
         if (event.interval !== Interval.ONCE) {
           string = `Deposit $${event.value} every ${event.interval}`;
@@ -646,14 +666,14 @@ function App() {
 
   return (
     <div>
-      <Box sx={{ flexGrow: 1 }} m={5}>
+      <Box sx={{ flexGrow: 1 }} m={2}>
         <Grid container spacing={{ xs: 2, lg: 3 }} columns={{ xs: 6 }}
         justifyContent="space-around"
         alignItems="center"
         >
 
           <Grid item xs={6}>
-            <Paper elevation={2} style={{ padding: 20}}>
+            <Paper elevation={2} style={{ padding: 10}}>
             <Stack spacing={1} direction="row" justifyContent="space-around">
               <DatePicker
                 label="Simulation Start Date"
