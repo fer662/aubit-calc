@@ -12,7 +12,6 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import InputAdornment from '@mui/material/InputAdornment';
 import Checkbox from '@mui/material/Checkbox';
 import { styled } from '@mui/material/styles';
-import Input from '@mui/material/Input';
 
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -275,7 +274,7 @@ function App() {
 
   useEffect(() => {
     calculate();
-  }, [events, startDate,simulationDurationDays, additionalDepositFees, additionalWithdrawalFees, simulateRedistributions, simulatedRedistributionsAPY, startingBalance, startingDeposit, calculate])
+  }, [events, startDate,simulationDurationDays, additionalDepositFees, additionalWithdrawalFees, simulateRedistributions, simulatedRedistributionsAPY, startingBalance, startingDeposit])
 
   function currentDateStartOfDayUTC() {
     const now = new Date();
@@ -694,7 +693,7 @@ function App() {
             </Stack>
             </Paper>
           </Grid>
-          <Grid item item xs={6}>
+          <Grid item xs={6}>
           <Paper elevation={2} style={{ padding: 20}}>
             <Stack spacing={1} direction="row" justifyContent="space-around">
               <TextField label="Additional Deposit Fees" type="number" value={additionalDepositFees}
