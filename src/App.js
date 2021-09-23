@@ -463,7 +463,7 @@ function App() {
     setChartOptions({
       chart: {
         type: "spline",
-        height: 600
+        height: 400
       },
       title: {
         text: ""
