@@ -52,8 +52,8 @@ const Interval = {
   MONTH: "month",        // 30 days
   QUARTER: "quarter",    // 91 days
   SEMESTER: "semester",  // 182 days
-  YEAR: "year",          // 365 days
-  ONCE: "once"
+  EVERY_YEAR: "every year",          // 365 days
+  ONCE: "once",
 };
 
 const EventType = {
@@ -114,20 +114,20 @@ function AddEventDialog(props) {
   const [interval, setInterval] = React.useState(Interval.MONTH);
   const [value, setValue] = React.useState(0);
   const [date, setDate] = React.useState(null);
+  const [name, setName] = React.useState("");
 
   const handleClose = () => {
     onClose();
   };
-
     
   const save = (x) => {
     const newEvent = {
       type: type,
       interval: interval,
       value: value,
-      date: date
+      date: date,
+      name: name
     };
-    console.log(newEvent);
     onSave(newEvent);
   };
 
@@ -139,6 +139,7 @@ function AddEventDialog(props) {
   const handleIntervalChange = (event) => { setInterval(event.target.value); };
   const handleValueChange = (event) => { setValue(event.target.value); };
   const handleDateChange = (newValue) => { setDate(newValue); };
+  const handleNameChange = (event) => { setName(event.target.value); };
 
   return (
     <Dialog onClose={handleClose} open={open}
@@ -147,6 +148,12 @@ function AddEventDialog(props) {
       <DialogTitle>Add New Event</DialogTitle>
       <DialogContent >
       <Grid container spacing={{ xs: 2 }} columns={{ xs: 3 }}>
+
+      <Grid item xs={3}>
+        <TextField label="Name" type="text" value={name}
+          InputLabelProps={{ shrink: true }}
+          onChange={handleNameChange}/>
+      </Grid>
       <Grid item xs={3}>
       <Select
         value={type}
@@ -170,7 +177,7 @@ function AddEventDialog(props) {
         <MenuItem value={Interval.MONTH}>{capitalize(Interval.MONTH)}</MenuItem>
         <MenuItem value={Interval.QUARTER}>{capitalize(Interval.QUARTER)}</MenuItem>
         <MenuItem value={Interval.SEMESTER}>{capitalize(Interval.SEMESTER)}</MenuItem>
-        <MenuItem value={Interval.SEMESTER}>{capitalize(Interval.YEAR)}</MenuItem>
+        <MenuItem value={Interval.EVERY_YEAR}>{capitalize(Interval.EVERY_YEAR)}</MenuItem>
       </Select>
       </Grid>
       <Grid item xs={3}>
@@ -180,7 +187,7 @@ function AddEventDialog(props) {
           onChange={handleValueChange}/>
       </Grid>
       
-      { interval === Interval.ONCE ? <Grid item xs={3}>
+      { interval === Interval.ONCE || interval === Interval.EVERY_YEAR ? <Grid item xs={3}>
       <DatePicker
           label="Date"
           inputFormat="dd/MM/yyyy"
@@ -324,9 +331,10 @@ function App() {
         case Interval.SEMESTER:
           neededElapsedTime = 182 * day;
           break;
-        case Interval.YEAR:
-          neededElapsedTime = 365 * day;
-          break;
+        case Interval.EVERY_YEAR:
+          const targetDate = event.date.getUTCDate();
+          const targetMonth = event.date.getUTCMonth();
+          return currentDate.getUTCDate() === targetDate && currentDate.getUTCMonth() === targetMonth;
         case Interval.ONCE:
           return currentDate.getTime() >= event.date.getTime() && !event.lastTriggerTime;
       }
@@ -403,7 +411,7 @@ function App() {
               totalDepositFees += fees;
               totalDeposited += event.value;
               currentBalance += event.value - fees;
-              deposits.push({ x: currentDate.getTime(), y: currentBalance, amount: event.value, fees: fees});
+              deposits.push({ x: currentDate.getTime(), y: currentBalance, amount: event.value, fees: fees, name: event.name});
               break;
             }
             case EventType.WITHDRAWAL:
@@ -412,7 +420,7 @@ function App() {
               totalWithdrawalFees += fees;
               currentBalance -= event.value;
               totalNetWithdrawn += event.value - fees;
-              withdrawals.push({ x: currentDate.getTime(), y: currentBalance, amount: event.value, fees: fees});
+              withdrawals.push({ x: currentDate.getTime(), y: currentBalance, amount: event.value, fees: fees, name: event.name});
               break;
             }
             case EventType.PERCENTAGE_WITHDRAWAL:
@@ -422,7 +430,7 @@ function App() {
                 totalWithdrawalFees += fees;
                 currentBalance -= value;
                 totalNetWithdrawn += value - fees;
-                withdrawals.push({ x: currentDate.getTime(), y: currentBalance, amount: value, fees: fees});
+                withdrawals.push({ x: currentDate.getTime(), y: currentBalance, amount: value, fees: fees, name: event.name});
                 break;
               }
           }
@@ -481,10 +489,10 @@ function App() {
           }
           else {
             if (this.point.series.name === 'Deposit') {
-              return `<b>${formatDateUTC(new Date(this.x))}</b><br/>Deposited <b>$${formatNumber(this.point.amount, 2)}</b><br/>Paid <b>$${formatNumber(this.point.fees, 2)}</b> in fees<br/>Net balance increase <b>$${formatNumber(this.point.amount - this.point.fees, 2)}</b>`;
+              return `<b>${formatDateUTC(new Date(this.x))}</b><br/>${this.point.name}<br/>Deposited <b>$${formatNumber(this.point.amount, 2)}</b><br/>Paid <b>$${formatNumber(this.point.fees, 2)}</b> in fees<br/>Net balance increase <b>$${formatNumber(this.point.amount - this.point.fees, 2)}</b>`;
             }
             else if (this.point.series.name === 'Withdrawal') {
-              return `<b>${formatDateUTC(new Date(this.x))}</b><br/>Withdrew <b>$${formatNumber(this.point.amount, 2)}</b><br/>Paid <b>$${formatNumber(this.point.fees, 2)}</b> in fees<br/>Received <b>$${formatNumber(this.point.amount - this.point.fees, 2)}</b>`;
+              return `<b>${formatDateUTC(new Date(this.x))}</b><br/>${this.point.name}<br/>Withdrew <b>$${formatNumber(this.point.amount, 2)}</b><br/>Paid <b>$${formatNumber(this.point.fees, 2)}</b> in fees<br/>Received <b>$${formatNumber(this.point.amount - this.point.fees, 2)}</b>`;
             }
           }
         },
@@ -640,32 +648,41 @@ function App() {
     let string = "";
     switch(event.type) {
       case EventType.WITHDRAWAL:
-        if (event.interval !== Interval.ONCE) {
-          string = `Withdraw $${event.value} every ${event.interval}`;
+        if (event.interval === Interval.ONCE) {
+          string = `Withdraw $${event.value} on ${formatDateUTC(event.date)}`;
+        }
+        else if (event.interval === Interval.EVERY_YEAR) {
+          string = `Withdraw $${event.value} every year on ${event.date.getUTCDate()}/${event.date.getUTCMonth() + 1}`;
         }
         else {
-          string = `Withdraw $${event.value} on ${formatDateUTC(event.date)}`;
+          string = `Withdraw $${event.value} every ${event.interval}`;
         }
         break;
       case EventType.PERCENTAGE_WITHDRAWAL:
-          if (event.interval !== Interval.ONCE) {
-            string = `Withdraw ${event.value}% every ${event.interval}`;
+          if (event.interval == Interval.ONCE) {
+            string = `Withdraw ${event.value}% on ${formatDateUTC(event.date)}`;
+          }
+          else if (event.interval === Interval.EVERY_YEAR) {
+            string = `Withdraw ${event.value}% every year on ${event.date.getUTCDate()}/${event.date.getUTCMonth() + 1}`;
           }
           else {
-            string = `Withdraw ${event.value}% on ${formatDateUTC(event.date)}`;
+            string = `Withdraw ${event.value}% every ${event.interval}`;
           }
           break;
       case EventType.DEPOSIT:
-        if (event.interval !== Interval.ONCE) {
-          string = `Deposit $${event.value} every ${event.interval}`;
+        if (event.interval === Interval.ONCE) {
+          string = `Deposit $${event.value} on ${formatDateUTC(event.date)}`; 
+        }
+        else if (event.interval === Interval.EVERY_YEAR) {
+          string = `Deposit $${event.value} every year on ${event.date.getUTCDate()}/${event.date.getUTCMonth() + 1}`;
         }
         else {
-          string = `Deposit $${event.value} on ${formatDateUTC(event.date)}`;
+          string = `Deposit $${event.value} every ${event.interval}`;
         }
         break;
     }
 
-    return (<li key={index}><Typography>{string}<IconButton onClick={() => deleteEventAtIndex(index)}><DeleteIcon color="secondary"></DeleteIcon></IconButton></Typography></li>);
+    return (<li key={index}><Typography>{event.name ? `${event.name}: ` : ""}{string}<IconButton onClick={() => deleteEventAtIndex(index)}><DeleteIcon color="secondary"></DeleteIcon></IconButton></Typography></li>);
   }
 
   return (
