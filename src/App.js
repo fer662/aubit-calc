@@ -34,7 +34,10 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 
 import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
 
+
+import { useParams } from 'react-router-dom';
 import moment from 'moment';
 import _ from 'lodash';
 
@@ -59,12 +62,51 @@ const EventType = {
   WITHDRAWAL: "withdrawal",                 // Periodic withdrawal of constant amount
 };
 
-SimpleDialog.propTypes = {
+SaveShareDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
   open: PropTypes.bool.isRequired
 };
 
-function SimpleDialog(props) {
+function SaveShareDialog(props) {
+  
+  const { onClose, open, link } = props;
+
+  const [type, setType] = React.useState(EventType.WITHDRAWAL);
+  const [interval, setInterval] = React.useState(Interval.MONTH);
+  const [value, setValue] = React.useState(0);
+  const [date, setDate] = React.useState(null);
+
+  const handleClose = () => {
+    onClose();
+  };
+
+  const handleCopy = (e) => {
+    navigator.clipboard.writeText(link)
+  };
+
+  return (
+    <Dialog onClose={handleClose} open={open}
+    aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description">
+      <DialogTitle>Save/Share</DialogTitle>
+      <DialogContent >
+      <DialogContentText style={{overflow: "hidden", textOverflow: "ellipsis", width: '500px'}}>{link}</DialogContentText>
+      </DialogContent>
+      <DialogActions>
+      <Button variant="contained" onClick={handleCopy}>Copy to Clipboard</Button>
+      <Button variant="contained" onClick={handleClose}>Dismiss</Button>
+      </DialogActions>
+
+    </Dialog>
+  );
+}
+
+AddEventDialog.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  open: PropTypes.bool.isRequired
+};
+
+function AddEventDialog(props) {
   
   const { onClose, onSave, open } = props;
 
@@ -77,6 +119,7 @@ function SimpleDialog(props) {
     onClose();
   };
 
+    
   const save = (x) => {
     const newEvent = {
       type: type,
@@ -108,7 +151,6 @@ function SimpleDialog(props) {
       <Select
         value={type}
         label="Type"
-        InputLabelProps={{ shrink: true }}
         onChange={handleTypeChange}
       >
         <MenuItem value={EventType.WITHDRAWAL}>{capitalize(EventType.WITHDRAWAL)}</MenuItem>
@@ -120,7 +162,6 @@ function SimpleDialog(props) {
       <Select
         value={interval}
         label="Interval"
-        InputLabelProps={{ shrink: true }}
         onChange={handleIntervalChange}
       >
         <MenuItem value={Interval.ONCE}>{capitalize(Interval.ONCE)}</MenuItem>
@@ -171,6 +212,12 @@ function App() {
   /** dialog state */
   const [open, setOpen] = useState(false);
 
+  /** dialog state */
+  const [saveShareOpen, setSaveShareOpen] = useState(false);
+
+  /** link to be shared in save/share dialog */
+  const [saveShareLink, setSaveShareLink] = useState(null);
+  
   /** whether to simulate fee redistributions at an arbitrary rate */
   const [startingBalance, setStartingBalance] = useState(1000);
 
@@ -181,7 +228,7 @@ function App() {
   const [simulateRedistributions, setSimulateRedistributions] = useState(false);
 
   /** arbitrary rate at which to simulate fee redistributions */
-  const [simulatedRedistributionsAPY, setSimulateRedistributionsAPY] = useState(2);
+  const [simulatedRedistributionsAPY, setSimulatedRedistributionsAPY] = useState(2);
 
   /** additional deposit fees depending on the payment method and currency */
   const [additionalDepositFees, setAdditionalDepositFees] = useState(1);
@@ -202,6 +249,28 @@ function App() {
    // { type: EventType.WITHDRAWAL, interval: Interval.ONCE, value: 1000, date: new Date(Date.UTC(2021, 9 - 1, 23)) }, 
   ]);
 
+  const params = useParams()
+
+  useEffect(() => {
+    try {
+      if (params.data) {
+        const data = JSON.parse(atob(params.data));
+        setEvents(data.events);
+        setSimulationDurationDays(data.simulationDurationDays);
+        setStartingBalance(data.startingBalance);
+        setStartingDeposit(data.startingDeposit);
+        setSimulateRedistributions(data.simulateRedistributions);
+        setSimulatedRedistributionsAPY(data.simulatedRedistributionsAPY);
+        setAdditionalDepositFees(data.additionalDepositFees);
+        setAdditionalWithdrawalFees(data.additionalWithdrawalFees);
+        setStartDate(new Date(data.startDate));
+      }
+    }
+    catch(e) {
+      console.log(e);
+    }
+  }, [params]);
+  
   const [chartOptions, setChartOptions] = useState({});
 
   useEffect(() => {
@@ -252,13 +321,8 @@ function App() {
           neededElapsedTime = 365 * day;
           break;
         case Interval.ONCE:
-          if (!event.lastTriggerTime) {
-            console.log(`${currentDate} ${currentDate.getTime()} vs ${event.date.getTime()} = ${event.date.getTime() - currentDate.getTime()}`);
-          }
-          
           return currentDate.getTime() >= event.date.getTime() && !event.lastTriggerTime;
       }
-      //console.log(`${currentDate.getTime()} vs ${lastTriggerTime} = ${currentDate.getTime() - lastTriggerTime} vs ${neededElapsedTime}`)
       return currentDate.getTime() - lastTriggerTime >= neededElapsedTime;
     }
     return false;
@@ -269,10 +333,10 @@ function App() {
     const utcStartDate = new Date(Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()));
 
     const dailyInterest = Math.pow(1 + kUSDSuperchargerAPY / 100, 1 / 365) - 1;
-    console.log(`dailyInterest: ${(100 * dailyInterest).toFixed(2)}%`);
+    //console.log(`dailyInterest: ${(100 * dailyInterest).toFixed(8)}%`);
 
     const dailyRedistributions = Math.pow(1 + simulatedRedistributionsAPY / 100, 1 / 365) - 1;
-    console.log(`dailyRedistributions: ${(100 * dailyRedistributions).toFixed(6)}%`);
+    //console.log(`dailyRedistributions: ${(100 * dailyRedistributions).toFixed(8)}%`);
 
     let currentDate = utcStartDate;
     const endDate = new Date(utcStartDate.getTime() + 24 * 3600 * 1000 * simulationDurationDays);
@@ -503,13 +567,15 @@ function App() {
   const handleStartingDepositChange = (e) => { setStartingDeposit(parseFloat(e.target.value) || 0); };
 
   const handleSimulateRedistributionsChange = (event) => { setSimulateRedistributions(event.target.checked); };
-  const handleSimulateRedistributionsAPYChange = (e) => { setSimulateRedistributionsAPY(e.target.value); };
+  const handleSimulatedRedistributionsAPYChange = (e) => { setSimulatedRedistributionsAPY(e.target.value); };
 
   const handleAdditionalDepositFeesChange = (e) => { setAdditionalDepositFees(e.target.value); };
   const handleAdditionalWithdrawalFeesChange = (e) => { setAdditionalWithdrawalFees(e.target.value); };
 
-  const handleClickOpen = () => { setOpen(true); };
-  const handleClose = (value) => { setOpen(false); };
+  const handleOpenAddEvent = () => { setOpen(true); };
+  
+  const handleAddEventClose = (value) => { setOpen(false); };
+  const handleSaveShareClose = (value) => { setSaveShareOpen(false); };
 
   const handleNewEvent = (event) => { 
     let newEvents = _.cloneDeep(events);
@@ -530,6 +596,23 @@ function App() {
     textAlign: 'center',
     color: theme.palette.text.secondary,
   }));
+
+  const handleSave = () => {
+    const data = {
+      events: events,
+      simulationDurationDays: simulationDurationDays,
+      startingBalance: startingBalance,
+      startingDeposit: startingDeposit,
+      simulateRedistributions: simulateRedistributions,
+      simulatedRedistributionsAPY: simulatedRedistributionsAPY,
+      additionalDepositFees: additionalDepositFees,
+      additionalWithdrawalFees: additionalWithdrawalFees,
+      startDate: startDate.getTime()
+    }
+    const encoded = btoa(JSON.stringify(data))
+    setSaveShareLink(`https://aubit-calculator.herokuapp.com/${encoded}`)
+    setSaveShareOpen(true)
+  }
 
   function stringifyEvent(event, index) {
 
@@ -605,8 +688,9 @@ function App() {
               InputLabelProps={{ shrink: true }}
               InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
               value={simulatedRedistributionsAPY}
-              onChange={handleSimulateRedistributionsAPYChange}/>: null }
-              <Button variant="contained" onClick={handleClickOpen}>Add Event</Button>
+              onChange={handleSimulatedRedistributionsAPYChange}/>: null }
+              <Button variant="contained" onClick={handleOpenAddEvent}>Add Event</Button>
+              <Button variant="contained" onClick={handleSave}>Share/Save</Button>
             </Stack>
             </Paper>
           </Grid>
@@ -626,7 +710,6 @@ function App() {
             </Stack>
             </Paper>
           </Grid>
-          
           <Grid item xs={6}>
             <Item>
               <HighchartsReact highcharts={Highcharts} options={chartOptions} />
@@ -637,10 +720,14 @@ function App() {
           {events.map((e, index) => stringifyEvent(e, index))} 
         </ul>
       </Box>
-      <SimpleDialog
+      <AddEventDialog
       open={open}
-      onClose={handleClose}
-      onSave={handleNewEvent}/>
+      onClose={handleAddEventClose}
+      onSave={handleNewEvent}/> 
+    <SaveShareDialog
+      link={saveShareLink}
+      open={saveShareOpen}
+      onClose={handleSaveShareClose}/> 
     </div>
   );
 }

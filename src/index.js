@@ -7,10 +7,23 @@ import reportWebVitals from './reportWebVitals';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from "react-router-dom";
+
 ReactDOM.render(
   <React.StrictMode>
   <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <Router>
+  <Switch>
+  <Route path="/:data?">
     <App />
+  </Route>
+  </Switch>
+  </Router>
   </LocalizationProvider>
   </React.StrictMode>,
   document.getElementById('root')
