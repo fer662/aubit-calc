@@ -254,7 +254,13 @@ function App() {
     try {
       if (params.data) {
         const data = JSON.parse(atob(params.data));
-        setEvents(data.events);
+
+        const events = data.events.map((e) => {
+          e.date = new Date(e.date);
+          return e;
+        })
+
+        setEvents(events);
         setSimulationDurationDays(data.simulationDurationDays);
         setStartingBalance(data.startingBalance);
         setStartingDeposit(data.startingDeposit);
