@@ -275,7 +275,7 @@ function App() {
 
   useEffect(() => {
     calculate();
-  }, [events, startDate,simulationDurationDays, additionalDepositFees, additionalWithdrawalFees, simulateRedistributions, simulatedRedistributionsAPY, startingBalance, startingDeposit])
+  }, [events, startDate,simulationDurationDays, additionalDepositFees, additionalWithdrawalFees, simulateRedistributions, simulatedRedistributionsAPY, startingBalance, startingDeposit, calculate])
 
   function currentDateStartOfDayUTC() {
     const now = new Date();
