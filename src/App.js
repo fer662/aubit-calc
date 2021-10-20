@@ -327,7 +327,7 @@ function App() {
   const [simulationDurationDays, setSimulationDurationDays] = useState(365);
 
   /** currency symbol */
-  const [symbol, setSymbol] = useState("BTC");
+  const [symbol, setSymbol] = useState("$");
 
   /** conditions and events that rule the simulation */
   const [events, setEvents] = useState([
