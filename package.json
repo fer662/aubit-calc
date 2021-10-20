@@ -27,6 +27,7 @@
     "web-vitals": "^1.0.1"
   },
   "scripts": {
+    "startdev": "react-scripts start",
     "start": "serve -s build",
     "build": "react-scripts --max_old_space_size=400 build",
     "test": "react-scripts test",

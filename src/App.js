@@ -108,7 +108,7 @@ AddEventDialog.propTypes = {
 
 function AddEventDialog(props) {
   
-  const { onClose, onSave, open } = props;
+  const { onClose, onSave, open, supercharger } = props;
 
   const [type, setType] = React.useState(EventType.WITHDRAWAL);
   const [interval, setInterval] = React.useState(Interval.MONTH);
@@ -194,7 +194,7 @@ function AddEventDialog(props) {
       <Grid item xs={3}>
         <TextField label="Amount" type="number" value={value}
           InputLabelProps={{ shrink: true }}
-          InputProps={{ endAdornment: type === EventType.PERCENTAGE_WITHDRAWAL ? <InputAdornment position="end">%</InputAdornment> : <InputAdornment position="end">USD</InputAdornment> }}
+          InputProps={{ endAdornment: type === EventType.PERCENTAGE_WITHDRAWAL ? <InputAdornment position="end">%</InputAdornment> : <InputAdornment position="end">{supercharger.name}</InputAdornment> }}
           onChange={handleValueChange}/>
       </Grid>
       
@@ -222,7 +222,72 @@ function App() {
   /** rate of FWT stake needed to power superchargers */
   const kFWTRequirementRate = 25;
 
-  const kUSDSuperchargerAPY = 43;
+  const kSuperchargers = [
+    {
+      symbol: '$',
+      trailing: false,
+      name: "USD",
+      apy: 43,
+      showFWTRequirement: true,
+      decimals: 2
+    },
+    {
+      symbol: '€',
+      trailing: true,
+      name: "EURO",
+      apy: 43,
+      showFWTRequirement: true,
+      decimals: 2
+    },
+    {
+      symbol: 'BTC',
+      trailing: true,
+      name: "BTC",
+      apy: 33,
+      showFWTRequirement: false,
+      decimals: 8
+    },
+    {
+      symbol: 'Ξ',
+      trailing: true,
+      name: "ETH",
+      apy: 20,
+      showFWTRequirement: false,
+      decimals: 4
+    },
+    {
+      symbol: 'ADA',
+      trailing: true,
+      name: "ADA",
+      apy: 20,
+      showFWTRequirement: false,
+      decimals: 4
+    },
+    {
+      symbol: 'DOT',
+      trailing: true,
+      name: "DOT",
+      apy: 20,
+      showFWTRequirement: false,
+      decimals: 4
+    },
+    {
+      symbol: 'ADA',
+      trailing: true,
+      name: "ADA",
+      apy: 20,
+      showFWTRequirement: false,
+      decimals: 4
+    },
+    {
+      symbol: 'BNB',
+      trailing: true,
+      name: "BNB",
+      apy: 20,
+      showFWTRequirement: false,
+      decimals: 4
+    }
+  ]
 
   // Base fees for all superchargers
   const kDepositFee = 0.44;
@@ -261,6 +326,9 @@ function App() {
   /** how long the simulation should run for in days*/
   const [simulationDurationDays, setSimulationDurationDays] = useState(365);
 
+  /** currency symbol */
+  const [symbol, setSymbol] = useState("BTC");
+
   /** conditions and events that rule the simulation */
   const [events, setEvents] = useState([
    // { type: EventType.WITHDRAWAL, interval: Interval.MONTH, value: 3000 },
@@ -289,6 +357,7 @@ function App() {
         setAdditionalDepositFees(data.additionalDepositFees);
         setAdditionalWithdrawalFees(data.additionalWithdrawalFees);
         setStartDate(new Date(data.startDate));
+        setSymbol(data.symbol || "$");
       }
     }
     catch(e) {
@@ -300,7 +369,7 @@ function App() {
 
   useEffect(() => {
     calculate();
-  }, [events, startDate,simulationDurationDays, additionalDepositFees, additionalWithdrawalFees, simulateRedistributions, simulatedRedistributionsAPY, startingBalance, startingDeposit])
+  }, [events, startDate,simulationDurationDays, additionalDepositFees, additionalWithdrawalFees, simulateRedistributions, simulatedRedistributionsAPY, startingBalance, startingDeposit, symbol])
 
   function currentDateStartOfDayUTC() {
     const now = new Date();
@@ -321,6 +390,10 @@ function App() {
       style                    : 'decimal',
       maximumFractionDigits    : maximumFractionDigits,
     });
+  }
+
+  function formatCurrency(value, supercharger) {
+    return `${!supercharger.trailing ? supercharger.symbol : ""}${formatNumber(parseFloat(value), supercharger.decimals)} ${supercharger.trailing ? supercharger.symbol : ""}`
   }
 
   function shouldTriggerEvent(event, currentDate, startDate) {
@@ -356,9 +429,11 @@ function App() {
 
   function calculate() {
 
+    const supercharger = kSuperchargers.find((sc) => sc.symbol === symbol)
+
     const utcStartDate = new Date(Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()));
 
-    const dailyInterest = Math.pow(1 + kUSDSuperchargerAPY / 100, 1 / 365) - 1;
+    const dailyInterest = Math.pow(1 + supercharger.apy / 100, 1 / 365) - 1;
     //console.log(`dailyInterest: ${(100 * dailyInterest).toFixed(8)}%`);
 
     const dailyRedistributions = Math.pow(1 + simulatedRedistributionsAPY / 100, 1 / 365) - 1;
@@ -460,6 +535,90 @@ function App() {
 
     const maxFWTNeeded = neededFWTValues.reduce((acc, value) => Math.max(acc, value), 0);
 
+    const series = [
+        {
+          color: '#6CF',
+          name: 'Supercharger Balance',
+          data: balanceValues,
+          tooltip: {
+            valueDecimals: 2,
+            valuePrefix: supercharger.symbol,
+          }
+        },
+        {
+          name: 'Deposit',
+          type: 'scatter',
+          data: deposits,
+          yAxis: 0,
+          color: '#0F0',
+          marker: {
+            enabled: true
+          },
+          formatter: function () {
+            return `<b>Deposited ${supercharger.symbol}${this.point.amount}<br/>`;
+          },
+        },
+        {
+          name: 'Withdrawal',
+          type: 'scatter',
+          data: withdrawals,
+          yAxis: 0,
+          color: '#00F',
+          marker: {
+            enabled: true
+          }
+        },
+        {
+          name: 'Total Withdrawal Fees',
+          data: historicWithdrawalFees,
+          visible: false,
+          tooltip: {
+            valueDecimals: 2,
+            valuePrefix: supercharger.symbol,
+          }
+        },
+        {
+          name: 'Total Deposit Fees',
+          data: historicDepositFees,
+          visible: false,
+          tooltip: {
+            valueDecimals: 2,
+            valuePrefix: supercharger.symbol,
+          }
+        },
+        {
+          name: 'Net Withdrawn',
+          data: historicNetWithdrawn,
+          visible: false,
+          tooltip: {
+            valueDecimals: 2,
+            valuePrefix: supercharger.symbol,
+          }
+        },
+      ]
+
+    if (supercharger.showFWTRequirement) {
+      series.push({
+        color: '#39F',
+        name: 'FWT Stake required',
+        data: neededFWTValues,
+        tooltip: {
+          valueDecimals: 2,
+          valuePrefix: supercharger.symbol,
+        }
+      });
+      series.push({
+        name: 'Maximum FWT Stake required',
+        color: '#F00',
+        data: neededFWTValues.map((x) => maxFWTNeeded),
+        tooltip: {
+          valueDecimals: 2,
+          valuePrefix: supercharger.symbol,
+          valueSuffix: ' in FWT',
+        }
+      });
+    }
+
     setChartOptions({
       chart: {
         type: "spline",
@@ -484,7 +643,7 @@ function App() {
           title: 'Balance'
         },
         {
-          title: '$',
+          title: supercharger.symbol,
           opposite: true,
           visible: false
         }
@@ -494,16 +653,15 @@ function App() {
         formatter: function () {
           if (this.points){
             return this.points.reduce(function (s, point) {
-                return s + '<br/>' + point.series.name + ': <b>$' +
-                formatNumber(point.y, 2) + '</b>';
+                return s + '<br/>' + point.series.name + `: <b> ${formatCurrency(point.y, supercharger)}</b>`;
             }, '<b>' + formatDateUTC(new Date(this.x)) + '</b>');
           }
           else {
             if (this.point.series.name === 'Deposit') {
-              return `<b>${formatDateUTC(new Date(this.x))}</b><br/>${this.point.name}<br/>Deposited <b>$${formatNumber(this.point.amount, 2)}</b><br/>Paid <b>$${formatNumber(this.point.fees, 2)}</b> in fees<br/>Net balance increase <b>$${formatNumber(this.point.amount - this.point.fees, 2)}</b>`;
+              return `<b>${formatDateUTC(new Date(this.x))}</b><br/>${this.point.name}<br/>Deposited <b>$${formatNumber(this.point.amount, 2)}</b><br/>Paid <b>$${formatNumber(this.point.fees, 2)}</b> in fees<br/>Net balance increase <b>${supercharger.symbol}${formatNumber(this.point.amount - this.point.fees, 2)}</b>`;
             }
             else if (this.point.series.name === 'Withdrawal') {
-              return `<b>${formatDateUTC(new Date(this.x))}</b><br/>${this.point.name}<br/>Withdrew <b>$${formatNumber(this.point.amount, 2)}</b><br/>Paid <b>$${formatNumber(this.point.fees, 2)}</b> in fees<br/>Received <b>$${formatNumber(this.point.amount - this.point.fees, 2)}</b>`;
+              return `<b>${formatDateUTC(new Date(this.x))}</b><br/>${this.point.name}<br/>Withdrew <b>$${formatNumber(this.point.amount, 2)}</b><br/>Paid <b>$${formatNumber(this.point.fees, 2)}</b> in fees<br/>Received <b>${supercharger.symbol}${formatNumber(this.point.amount - this.point.fees, 2)}</b>`;
             }
           }
         },
@@ -518,86 +676,7 @@ function App() {
           }
         }
       },
-      series: [
-        {
-          color: '#6CF',
-          name: 'Supercharger Balance',
-          data: balanceValues,
-          tooltip: {
-            valueDecimals: 2,
-            valuePrefix: '$',
-          }
-        },
-        {
-          color: '#39F',
-          name: 'FWT Stake required',
-          data: neededFWTValues,
-          tooltip: {
-            valueDecimals: 2,
-            valuePrefix: '$',
-          }
-        },
-        {
-          name: 'Maximum FWT Stake required',
-          color: '#F00',
-          data: neededFWTValues.map((x) => maxFWTNeeded),
-          tooltip: {
-            valueDecimals: 2,
-            valuePrefix: '$',
-            valueSuffix: ' in FWT',
-          }
-        },
-        {
-          name: 'Deposit',
-          type: 'scatter',
-          data: deposits,
-          yAxis: 0,
-          color: '#0F0',
-          marker: {
-            enabled: true
-          },
-          formatter: function () {
-            return `<b>Deposited $${this.point.amount}<br/>`;
-          },
-        },
-        {
-          name: 'Withdrawal',
-          type: 'scatter',
-          data: withdrawals,
-          yAxis: 0,
-          color: '#00F',
-          marker: {
-            enabled: true
-          }
-        },
-        {
-          name: 'Total Withdrawal Fees',
-          data: historicWithdrawalFees,
-          visible: false,
-          tooltip: {
-            valueDecimals: 2,
-            valuePrefix: '$',
-          }
-        },
-        {
-          name: 'Total Deposit Fees',
-          data: historicDepositFees,
-          visible: false,
-          tooltip: {
-            valueDecimals: 2,
-            valuePrefix: '$',
-          }
-        },
-        {
-          name: 'Net Withdrawn',
-          data: historicNetWithdrawn,
-          visible: false,
-          tooltip: {
-            valueDecimals: 2,
-            valuePrefix: '$',
-          }
-        },
-      ]
+      series: series
     });
   }
 
@@ -637,6 +716,10 @@ function App() {
     color: theme.palette.text.secondary,
   }));
 
+  const handleSymbolChange = (event) => {
+    setSymbol(event.target.value)
+  }
+
   const handleSave = () => {
     const data = {
       events: events,
@@ -647,7 +730,8 @@ function App() {
       simulatedRedistributionsAPY: simulatedRedistributionsAPY,
       additionalDepositFees: additionalDepositFees,
       additionalWithdrawalFees: additionalWithdrawalFees,
-      startDate: startDate.getTime()
+      startDate: startDate.getTime(),
+      symbol: symbol
     }
     const encoded = btoa(JSON.stringify(data))
     setSaveShareLink(`https://aubit-calculator.herokuapp.com/${encoded}`)
@@ -660,13 +744,13 @@ function App() {
     switch(event.type) {
       case EventType.WITHDRAWAL:
         if (event.interval === Interval.ONCE) {
-          string = `Withdraw $${event.value} on ${formatDateUTC(event.date)}`;
+          string = `Withdraw ${formatCurrency(event.value, supercharger)} on ${formatDateUTC(event.date)}`;
         }
         else if (event.interval === Interval.EVERY_YEAR) {
-          string = `Withdraw $${event.value} every year on ${event.date.getUTCDate()}/${event.date.getUTCMonth() + 1}`;
+          string = `Withdraw ${formatCurrency(event.value, supercharger)} every year on ${event.date.getUTCDate()}/${event.date.getUTCMonth() + 1}`;
         }
         else {
-          string = `Withdraw $${event.value} every ${event.interval}`;
+          string = `Withdraw ${formatCurrency(event.value, supercharger)} every ${event.interval}`;
         }
         break;
       case EventType.PERCENTAGE_WITHDRAWAL:
@@ -682,19 +766,21 @@ function App() {
           break;
       case EventType.DEPOSIT:
         if (event.interval === Interval.ONCE) {
-          string = `Deposit $${event.value} on ${formatDateUTC(event.date)}`; 
+          string = `Deposit ${formatCurrency(event.value, supercharger)} on ${formatDateUTC(event.date)}`; 
         }
         else if (event.interval === Interval.EVERY_YEAR) {
-          string = `Deposit $${event.value} every year on ${event.date.getUTCDate()}/${event.date.getUTCMonth() + 1}`;
+          string = `Deposit ${formatCurrency(event.value, supercharger)} every year on ${event.date.getUTCDate()}/${event.date.getUTCMonth() + 1}`;
         }
         else {
-          string = `Deposit $${event.value} every ${event.interval}`;
+          string = `Deposit ${formatCurrency(event.value, supercharger)} every ${event.interval}`;
         }
         break;
     }
 
     return (<li key={index}><Typography>{event.name ? `${event.name}: ` : ""}{string}<IconButton onClick={() => deleteEventAtIndex(index)}><DeleteIcon color="secondary"></DeleteIcon></IconButton></Typography></li>);
   }
+
+  const supercharger = kSuperchargers.find((sc) => sc.symbol === symbol)
 
   return (
     <div>
@@ -720,12 +806,28 @@ function App() {
               onChange={handleSimulationDurationChange}/>
               <TextField key="starting-balance" label="Starting Balance" type="number" value={startingBalance}
               InputLabelProps={{ shrink: true }}
-              InputProps={{ endAdornment: <InputAdornment position="end">USD</InputAdornment> }}
+              InputProps={{ endAdornment: <InputAdornment position="end">{supercharger.name}</InputAdornment> }}
               onChange={handleStartingBalanceChange}/>
               <TextField key="starting-deposit"  label="Starting deposit" type="number" value={startingDeposit}
               InputLabelProps={{ shrink: true }}
-              InputProps={{ endAdornment: <InputAdornment position="end">USD</InputAdornment> }}
+              InputProps={{ endAdornment: <InputAdornment position="end">{supercharger.name}</InputAdornment> }}
               onChange={handleStartingDepositChange}/>
+
+              <FormControl fullWidth required variant="outlined">
+              <InputLabel shrink required={false} htmlFor="type">Type</InputLabel>
+              <Select
+                id="type"
+                value={symbol}
+                label="Type"
+                onChange={handleSymbolChange}
+              >
+              {kSuperchargers.map(function(object, i){
+                  return <MenuItem value={object.symbol} key={i}>{object.name}</MenuItem>;
+              })}
+              </Select>
+              </FormControl>
+
+
             </Stack>
             </Paper>
           </Grid>
@@ -779,6 +881,7 @@ function App() {
       </Box>
       <AddEventDialog
       open={open}
+      supercharger={supercharger}
       onClose={handleAddEventClose}
       onSave={handleNewEvent}/> 
     <SaveShareDialog
