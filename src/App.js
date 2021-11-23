@@ -658,10 +658,10 @@ function App() {
           }
           else {
             if (this.point.series.name === 'Deposit') {
-              return `<b>${formatDateUTC(new Date(this.x))}</b><br/>${this.point.name}<br/>Deposited <b>$${formatNumber(this.point.amount, 2)}</b><br/>Paid <b>$${formatNumber(this.point.fees, 2)}</b> in fees<br/>Net balance increase <b>${supercharger.symbol}${formatNumber(this.point.amount - this.point.fees, 2)}</b>`;
+              return `<b>${formatDateUTC(new Date(this.x))}</b><br/>${this.point.name ? this.point.name : ""}<br/>Deposited <b>${formatCurrency(this.point.amount, supercharger)}</b><br/>Paid <b>${formatCurrency(this.point.fees, supercharger)}</b> in fees<br/>Net balance increase <b>${supercharger.symbol}${formatNumber(this.point.amount - this.point.fees, 2)}</b>`;
             }
             else if (this.point.series.name === 'Withdrawal') {
-              return `<b>${formatDateUTC(new Date(this.x))}</b><br/>${this.point.name}<br/>Withdrew <b>$${formatNumber(this.point.amount, 2)}</b><br/>Paid <b>$${formatNumber(this.point.fees, 2)}</b> in fees<br/>Received <b>${supercharger.symbol}${formatNumber(this.point.amount - this.point.fees, 2)}</b>`;
+              return `<b>${formatDateUTC(new Date(this.x))}</b><br/>${this.point.name ? this.point.name : ""}<br/>Withdrew <b>${formatCurrency(this.point.amount, supercharger)}</b><br/>Paid <b>${formatCurrency(this.point.fees, supercharger)}</b> in fees<br/>Received <b>${supercharger.symbol}${formatNumber(this.point.amount - this.point.fees, 2)}</b>`;
             }
           }
         },
