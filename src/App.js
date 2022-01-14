@@ -290,8 +290,8 @@ function App() {
   ]
 
   // Base fees for all superchargers
-  const kDepositFee = 0.44;
-  const kWithdrawalFee = 2.56;
+  const kDepositFee = 0.00;
+  const kWithdrawalFee = 0.00;
 
   /** dialog state */
   const [open, setOpen] = useState(false);
@@ -315,10 +315,10 @@ function App() {
   const [simulatedRedistributionsAPY, setSimulatedRedistributionsAPY] = useState(2);
 
   /** additional deposit fees depending on the payment method and currency */
-  const [additionalDepositFees, setAdditionalDepositFees] = useState(1);
+  const [additionalDepositFees, setAdditionalDepositFees] = useState(0.23);
 
   /** additional withdrawal fees depending on the method and currency */
-  const [additionalWithdrawalFees, setAdditionalWithdrawalFees] = useState(1);
+  const [additionalWithdrawalFees, setAdditionalWithdrawalFees] = useState(0);
 
   /** date at which the simulation starts */
   const [startDate, setStartDate] = useState(currentDateStartOfDayUTC());
