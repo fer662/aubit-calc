@@ -21,7 +21,7 @@ import Stack from '@mui/material/Stack';
 import Accordion from '@mui/material/Accordion';
 import Typography from '@mui/material/Typography';
 
-import Dialog from '@mui/material/Dialog';
+
 import DeleteIcon from '@mui/icons-material/Delete';
 import { format } from 'date-fns';
 
@@ -29,6 +29,7 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
+import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 
@@ -48,6 +49,7 @@ Highcharts.setOptions({
 });
 
 const Interval = {
+  DAY: "day",            // 1 day
   WEEK: "week",          // 7 days
   MONTH: "month",        // 30 days
   QUARTER: "quarter",    // 91 days
@@ -145,7 +147,7 @@ function AddEventDialog(props) {
     <Dialog onClose={handleClose} open={open}
     aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description">
-      <DialogTitle>Add New Event</DialogTitle>
+      <DialogTitle>Add New Order</DialogTitle>
       <DialogContent >
       <Grid container spacing={{ xs: 2 }} columns={{ xs: 3 }}>
       <Grid item xs={3} padding={3}>
@@ -183,6 +185,7 @@ function AddEventDialog(props) {
         onChange={handleIntervalChange}
       >
         <MenuItem value={Interval.ONCE}>{capitalize(Interval.ONCE)}</MenuItem>
+        <MenuItem value={Interval.DAY}>{capitalize(Interval.DAY)}</MenuItem>
         <MenuItem value={Interval.WEEK}>{capitalize(Interval.WEEK)}</MenuItem>
         <MenuItem value={Interval.MONTH}>{capitalize(Interval.MONTH)}</MenuItem>
         <MenuItem value={Interval.QUARTER}>{capitalize(Interval.QUARTER)}</MenuItem>
@@ -403,6 +406,8 @@ function App() {
 
       let neededElapsedTime = 0;
       switch (event.interval) {
+        case Interval.DAY:
+          neededElapsedTime = 1 * day;        
         case Interval.WEEK:
           neededElapsedTime = 7 * day;
           break;
