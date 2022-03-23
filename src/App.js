@@ -407,7 +407,8 @@ function App() {
       let neededElapsedTime = 0;
       switch (event.interval) {
         case Interval.DAY:
-          neededElapsedTime = 1 * day;        
+          neededElapsedTime = 1 * day;
+          break; 
         case Interval.WEEK:
           neededElapsedTime = 7 * day;
           break;
