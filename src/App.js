@@ -152,11 +152,11 @@ function AddEventDialog(props) {
           <Grid item xs={3}>
 
             <FormControl fullWidth required variant="outlined">
-              <InputLabel shrink required={false} htmlFor="type">Type</InputLabel>
+              <InputLabel shrink required={false} htmlFor="type">Supercharger</InputLabel>
               <Select
                 id="type"
                 value={type}
-                label="Type"
+                label="Supercharger"
                 onChange={handleTypeChange}
               >
                 <MenuItem value={EventType.WITHDRAWAL}>{capitalize(EventType.WITHDRAWAL)}</MenuItem>
