@@ -152,11 +152,11 @@ function AddEventDialog(props) {
           <Grid item xs={3}>
 
             <FormControl fullWidth required variant="outlined">
-              <InputLabel shrink required={false} htmlFor="type">Supercharger</InputLabel>
+              <InputLabel shrink required={false} htmlFor="type">Type</InputLabel>
               <Select
                 id="type"
                 value={type}
-                label="Supercharger"
+                label="Type"
                 onChange={handleTypeChange}
               >
                 <MenuItem value={EventType.WITHDRAWAL}>{capitalize(EventType.WITHDRAWAL)}</MenuItem>
@@ -778,7 +778,7 @@ function App() {
       symbol: symbol
     }
     const encoded = btoa(JSON.stringify(data))
-    setSaveShareLink(`https://aubit-calculator.herokuapp.com/${encoded}`)
+    setSaveShareLink(`https://freeway-calculator.herokuapp.com/${encoded}`)
     setSaveShareOpen(true)
   }
 
@@ -860,7 +860,7 @@ function App() {
                 <FormControl required variant="outlined">
                   <InputLabel shrink required={false} htmlFor="buy-in-fee">Deposit using</InputLabel>
                   <Select
-                    id="type"
+                    id="buy-in-fee"
                     value={additionalDepositFees}
                     label="Buy in using"
                     onChange={handleAdditionalDepositFeesChange}
@@ -870,7 +870,7 @@ function App() {
                   </Select>
                 </FormControl>
                 <FormControl required variant="outlined">
-                  <InputLabel shrink required={false} htmlFor="type">Type</InputLabel>
+                  <InputLabel shrink required={false} htmlFor="type">Supercharger</InputLabel>
                   <Select
                     id="type"
                     value={symbol}
